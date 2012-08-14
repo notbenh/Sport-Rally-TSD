@@ -9,7 +9,7 @@ CZT 10:00
 3.48M R@"EXIT" (Toward Oregon City)
 8.02M OB "Entering West Linn" (on bridge)
 10.49M R@"EXIT 6"
-10.77M L@SI
+10.77M L@SIG
 10.98M R@T
 11.11M L@12th !!HTS
 11.30M S@"EXCEPT RIGHT TURN"

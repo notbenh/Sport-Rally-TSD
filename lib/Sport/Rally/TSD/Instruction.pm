@@ -1,23 +1,55 @@
 package Sport::Rally::TSD::Instruction;
 use Moose;
+use List::MoreUtils qw{natatime};
 
 has raw => is => 'ro'
          , isa => 'Str'
-         , trigger => 'parse'
+         , trigger => sub{ shift->parse }
+         #use Data::Dumper; warn Dumper({TRIGGER => \@_}); }
 ;
+
+has formated => is => 'rw',
+              , isa => 'Str'
+              ;
+
+has CAST => is => 'rw'
+          , isa => 'Int'
+          , default => 0 # might be supplied at new, possibly overwritten by parse
+          ;
 
 has aliases => is => 'rw'
              , isa => 'ArrayRef'
-             , default => sub{[ @ => ' at '
-                              , L => 'LEFT'
-                              , R => 'RIGHT'
+             , default => sub{[ '@' => ' at '
+                              , L   => 'LEFT'
+                              , R   => 'RIGHT'
                               , ODO => 'ODOMETER'
                               , CAL => 'Calibration'
-                              , SI  => 'Signal'
+                              , SIG => 'Signal'
                               , OB  => 'OBSERVE'
-                              , /CAST\s*(\d+)/ => sub{$self->CAST($1)}
+                              , qr{CAST\s*(\d+)} => 'CAST'
                               ]}
 ;
+
+sub parse {
+  my $self = shift;
+  warn 'PARSE: ', $self->raw;
+  my $formated = $self->raw;
+  my $it = natatime 2, @{ $self->aliases };
+  while (my @pairs = $it->()) {
+    my ($from,$to) = @pairs;
+    my $r = ref($from);
+    $from = qr{\b?$from\b?} unless $r eq 'REGEXP';
+    if( $self->can($to) ) {
+      $self->$to($formated =~ $from);
+    }
+    else {
+      $formated =~ s/$from/$1$to$2/g;
+    }
+  }
+  $self->formated($formated);
+  warn '   FORMATED: ', $self->formated;
+  return $self;
+}
 
 =pod
 
