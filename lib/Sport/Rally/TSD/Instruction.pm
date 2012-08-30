@@ -1,6 +1,7 @@
 package Sport::Rally::TSD::Instruction;
 use Moose;
 use List::MoreUtils qw{natatime};
+use Time::Simple;
 
 has raw => is => 'ro'
          , isa => 'Str'
@@ -17,6 +18,27 @@ has CAST => is => 'rw'
           , default => 0 # might be supplied at new, possibly overwritten by parse
           ;
 
+has distance => is => 'rw'
+              , isa => 'Num'
+              , default => 0
+              ;
+
+has distance_diff => is => 'rw'
+                   , isa => 'Num'
+                   , default => 0
+                   , trigger => sub{ die Dumper({ TRIGGER => \@_ })
+                   ;
+
+has CZT => is => 'rw'
+         , isa => 'Time::Simple'
+         ;
+
+has time_split => is => 'rw'
+                , isa => 'Time::Simple'
+                , lazy => 1
+                , default => sub{ Time::Simple->new(0) }
+                ;
+
 has aliases => is => 'rw'
              , isa => 'ArrayRef'
              , default => sub{[ '@' => ' at '
@@ -28,7 +50,7 @@ has aliases => is => 'rw'
                               , OB  => 'OBSERVE'
                               , qr{CAST\s*(\d+)} => 'CAST'
                               ]}
-;
+             ;
 
 sub parse {
   my $self = shift;
@@ -47,6 +69,15 @@ sub parse {
     }
   }
   $self->formated($formated);
+
+  if ( $formated =~ m/(\d+(?:[.]\d+)?)M\s/) {
+    $self->distance( $1 );
+  }
+
+  if ( $formated =~ m/^CZT (\d+:\d\d(?::\d\d)?)/ ){
+    $self->CZT( Time::Simple->new($1) );
+  }
+
   warn '   FORMATED: ', $self->formated;
   return $self;
 }
